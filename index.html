@@ -59,31 +59,65 @@
 
 <div class="movie-grid" id="movieGrid"></div>
 
+
+<!--  ⭐ HIDDEN JSON DATABASE INSIDE INDEX.HTML ⭐ -->
+<script id="movieDB" type="application/json">
+{
+  "movies": [
+    {
+      "id": "movie1",
+      "title": "Fast & Furious 9",
+      "thumbnail": "images/fast9.jpg",
+      "servers": {
+        "server1": "https://server1.com/fast9.mp4",
+        "server2": "https://server2.com/fast9.mp4",
+        "server3": "https://server3.com/fast9.mp4",
+        "server4": "https://server4.com/fast9.mp4"
+      },
+      "adLink": "https://your-ad-link.com"
+    },
+
+    {
+      "id": "movie2",
+      "title": "Avatar: The Way of Water",
+      "thumbnail": "images/avatar2.jpg",
+      "servers": {
+        "server1": "https://server1.com/avatar2.mp4",
+        "server2": "https://server2.com/avatar2.mp4",
+        "server3": "https://server3.com/avatar2.mp4",
+        "server4": "https://server4.com/avatar2.mp4"
+      },
+      "adLink": "https://your-ad-link.com"
+    }
+  ]
+}
+</script>
+
+
+
 <script>
-  // Load movie list from JSON
-  fetch("movies.json?cache=" + Date.now())
-    .then(res => res.json())
-    .then(data => {
-      const grid = document.getElementById("movieGrid");
+  // ⭐ READ DATABASE INSIDE HTML ⭐
+  const dbText = document.getElementById("movieDB").textContent;
+  const data = JSON.parse(dbText);
 
-      data.movies.forEach(movie => {
-        let card = document.createElement("div");
-        card.className = "movie-card";
+  const grid = document.getElementById("movieGrid");
 
-        card.innerHTML = `
-          <img src="${movie.thumbnail}" alt="${movie.title}">
-          <div class="movie-title">${movie.title}</div>
-        `;
+  // Build movie cards
+  data.movies.forEach(movie => {
+    const card = document.createElement("div");
+    card.className = "movie-card";
 
-        // Open player.html with movie ID
-        card.onclick = () => {
-          window.location.href = `player.html?id=${movie.id}`;
-        };
+    card.innerHTML = `
+      <img src="${movie.thumbnail}" alt="${movie.title}">
+      <div class="movie-title">${movie.title}</div>
+    `;
 
-        grid.appendChild(card);
-      });
-    })
-    .catch(err => console.error("JSON load error:", err));
+    card.onclick = () => {
+      window.location.href = `player.html?id=${movie.id}`;
+    };
+
+    grid.appendChild(card);
+  });
 </script>
 
 </body>
