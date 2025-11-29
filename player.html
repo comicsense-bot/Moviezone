@@ -2,21 +2,43 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Watch Movie</title>
 
 <style>
     body {
         background: #000;
         color: white;
-        font-family: Arial;
+        font-family: Arial, sans-serif;
         text-align: center;
         margin: 0;
         padding: 20px;
     }
 
     .server-buttons {
-        margin-top: 15px;
-        display: none; /* Hidden because no internal player */
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .server-buttons button {
+        padding: 12px 18px;
+        background: #1a73e8;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        flex: 1 1 40%;
+        max-width: 150px;
+        transition: 0.2s;
+    }
+
+    .server-buttons button.active {
+        background: #ff9800;
+        color: black;
     }
 
     #adBox {
@@ -30,6 +52,7 @@
         color: white;
         font-size: 25px;
         flex-direction: column;
+        z-index: 9999;
     }
 
     #adBox a {
@@ -50,12 +73,31 @@
         text-decoration: none;
         display: inline-block;
     }
+
+    @media (max-width: 480px) {
+        .server-buttons button {
+            flex: 1 1 100%;
+            max-width: 100%;
+        }
+
+        .external-link-btn {
+            width: 90%;
+        }
+    }
 </style>
 </head>
 
 <body>
 
 <h2 id="movieTitle">Loading...</h2>
+
+<!-- Server Selection Buttons -->
+<div class="server-buttons" id="serverButtons">
+    <button data-server="srv1">Server 1</button>
+    <button data-server="srv2">Server 2</button>
+    <button data-server="srv3">Server 3</button>
+    <button data-server="srv4">Server 4</button>
+</div>
 
 <!-- External video link button -->
 <a id="externalLink" class="external-link-btn" href="#" target="_blank">Watch Now</a>
@@ -75,14 +117,23 @@
     {
       "id": "movie1",
       "title": "Superman 2025",
-      "link": "https://vidsrc.to/embed/movie/1061474",
+      "servers": {
+          "srv1": "https://vidsrc.to/embed/movie/1061474",
+          "srv2": "https://111movies.com/movie/1061474",
+          "srv3": "https://vidlink.pro/movie/1061474",
+          "srv4": "https://player.videasy.net/movie/1061474"
+      },
       "adLink": "https://your-ad-link.com"
     },
-
     {
       "id": "movie2",
       "title": "Avatar 2: The Way of Water",
-      "link": "https://server1.com/avatar2.mp4",
+      "servers": {
+          "srv1": "https://server1.com/avatar2.mp4",
+          "srv2": "https://server2.com/avatar2.mp4",
+          "srv3": "https://server3.com/avatar2.mp4",
+          "srv4": "https://server4.com/avatar2.mp4"
+      },
       "adLink": "https://your-ad-link.com"
     }
   ]
@@ -105,9 +156,25 @@ if (!MOVIE) {
     document.body.innerHTML = "<h1>Movie not found!</h1>";
 } else {
     document.getElementById("movieTitle").innerText = MOVIE.title;
-    document.getElementById("externalLink").href = MOVIE.link;
     document.getElementById("adLink").href = MOVIE.adLink;
 }
+
+/* ---------------------------
+   SERVER BUTTON LOGIC
+--------------------------- */
+let selectedServer = null;
+const serverButtons = document.querySelectorAll("#serverButtons button");
+serverButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+        selectedServer = btn.dataset.server;
+        // Highlight active button
+        serverButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // Update Watch Now link
+        document.getElementById("externalLink").href = MOVIE.servers[selectedServer];
+    });
+});
 
 /* ---------------------------
    12 HOUR COUNTDOWN
