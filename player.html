@@ -1,140 +1,207 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Watch Movie</title>
+<meta charset="UTF-8">
+<title>Watch Movie</title>
 
-  <style>
-    body { font-family: Arial; background:#000; color:white; text-align:center; }
-    video { width:100%; max-width:900px; margin-top:20px; border-radius:10px; }
-    
+<style>
+    body {
+        background: #000;
+        color: white;
+        font-family: Arial;
+        text-align: center;
+        margin: 0;
+        padding: 20px;
+    }
+
+    video {
+        width: 100%;
+        max-width: 900px;
+        margin-top: 20px;
+        border-radius: 10px;
+    }
+
     .server-buttons {
-      margin-top:15px;
-      display:flex;
-      justify-content:center;
-      gap:10px;
-      flex-wrap:wrap;
+        margin-top: 15px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
     }
 
     .server-btn {
-      padding:10px 18px;
-      background:#444;
-      border:none;
-      border-radius:8px;
-      color:white;
-      font-size:15px;
-      cursor:pointer;
+        padding: 10px 18px;
+        background: #444;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 15px;
+        cursor: pointer;
     }
 
     .server-btn.active {
-      background:#ff9800;
-      font-weight:bold;
+        background: #ff9800;
+        font-weight: bold;
     }
 
     #adBox {
-      position:fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.85);
-      color:white; font-size:25px;
-      display:none;
-      justify-content:center; align-items:center;
-      text-align:center;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 25px;
+        flex-direction: column;
     }
-  </style>
+
+    #adBox a {
+        color: yellow;
+        font-size: 20px;
+        margin-top: 10px;
+    }
+</style>
 </head>
+
 <body>
 
-<h2 id="movieTitle"></h2>
+<h2 id="movieTitle">Loading...</h2>
 
 <video id="player" controls></video>
 
 <div class="server-buttons">
-  <button class="server-btn" id="btn1">Server 1</button>
-  <button class="server-btn" id="btn2">Server 2</button>
-  <button class="server-btn" id="btn3">Server 3</button>
-  <button class="server-btn" id="btn4">Server 4</button>
+    <button class="server-btn" id="btn1">Server 1</button>
+    <button class="server-btn" id="btn2">Server 2</button>
+    <button class="server-btn" id="btn3">Server 3</button>
+    <button class="server-btn" id="btn4">Server 4</button>
 </div>
 
 <h3>Time left: <span id="countdown"></span></h3>
 
+<!-- ⭐ AD POPUP ⭐ -->
 <div id="adBox">
-  <p>Advertisement</p>
-  <a id="adLink" href="#" style="color:yellow; font-size:20px;" target="_blank">Click here</a>
+    <p>Advertisement</p>
+    <a id="adLink" href="#" target="_blank">Click Here</a>
 </div>
 
+
+<!-- ⭐ BUILT-IN MOVIE DATABASE ⭐ -->
+<script id="movieDB" type="application/json">
+{
+  "movies": [
+    {
+      "id": "movie1",
+      "title": "Fast & Furious 9",
+      "servers": {
+        "server1": "https://server1.com/fast9.mp4",
+        "server2": "https://server2.com/fast9.mp4",
+        "server3": "https://server3.com/fast9.mp4",
+        "server4": "https://server4.com/fast9.mp4"
+      },
+      "adLink": "https://your-ad-link.com"
+    },
+
+    {
+      "id": "movie2",
+      "title": "Avatar 2: The Way of Water",
+      "servers": {
+        "server1": "https://server1.com/avatar2.mp4",
+        "server2": "https://server2.com/avatar2.mp4",
+        "server3": "https://server3.com/avatar2.mp4",
+        "server4": "https://server4.com/avatar2.mp4"
+      },
+      "adLink": "https://your-ad-link.com"
+    }
+  ]
+}
+</script>
+
+
+
 <script>
-  // Get movie ID
-  const movieID = new URLSearchParams(window.location.search).get("id");
+/* ---------------------------
+   READ DATABASE FROM HTML
+--------------------------- */
+const db = JSON.parse(document.getElementById("movieDB").textContent);
 
-  let MOVIE = null;
+/* ---------------------------
+   GET MOVIE ID FROM URL
+--------------------------- */
+const movieID = new URLSearchParams(window.location.search).get("id");
+const MOVIE = db.movies.find(m => m.id === movieID);
 
-  // Load movie data
-  fetch("movies.json")
-    .then(res => res.json())
-    .then(data => {
-      MOVIE = data.movies.find(m => m.id === movieID);
+document.getElementById("movieTitle").innerText = MOVIE.title;
+document.getElementById("adLink").href = MOVIE.adLink;
 
-      document.getElementById("movieTitle").innerText = MOVIE.title;
-      document.getElementById("adLink").href = MOVIE.adLink;
+const player = document.getElementById("player");
 
-      // Default server
-      setServer(MOVIE.servers.server1, 1);
 
-      // Button actions
-      document.getElementById("btn1").onclick = () => setServer(MOVIE.servers.server1, 1);
-      document.getElementById("btn2").onclick = () => setServer(MOVIE.servers.server2, 2);
-      document.getElementById("btn3").onclick = () => setServer(MOVIE.servers.server3, 3);
-      document.getElementById("btn4").onclick = () => setServer(MOVIE.servers.server4, 4);
-    });
+/* ---------------------------
+   SERVER SWITCHING
+--------------------------- */
+function setServer(url, num) {
+    player.src = url;
 
-  function setServer(url, number) {
-    document.getElementById("player").src = url;
+    document.querySelectorAll(".server-btn")
+        .forEach(btn => btn.classList.remove("active"));
 
-    // Remove all active
-    document.querySelectorAll(".server-btn").forEach(btn => btn.classList.remove("active"));
+    document.getElementById("btn" + num).classList.add("active");
+}
 
-    // Highlight selected
-    document.getElementById("btn" + number).classList.add("active");
-  }
+document.getElementById("btn1").onclick = () => setServer(MOVIE.servers.server1, 1);
+document.getElementById("btn2").onclick = () => setServer(MOVIE.servers.server2, 2);
+document.getElementById("btn3").onclick = () => setServer(MOVIE.servers.server3, 3);
+document.getElementById("btn4").onclick = () => setServer(MOVIE.servers.server4, 4);
 
-  // --------------------------
-  // COUNTDOWN SYSTEM (12 HOURS)
-  // --------------------------
-  let expireTime = localStorage.getItem("timer_" + movieID);
+setServer(MOVIE.servers.server1, 1); // Default server
 
-  if (!expireTime) {
-    expireTime = Date.now() + (12 * 60 * 60 * 1000); // 12 hours
-    localStorage.setItem("timer_" + movieID, expireTime);
-  }
 
-  function timerLoop() {
+
+/* ---------------------------
+   12 HOUR COUNTDOWN TIMER
+--------------------------- */
+let expireKey = "timer_" + movieID;
+let expireTime = localStorage.getItem(expireKey);
+
+if (!expireTime) {
+    expireTime = Date.now() + 12 * 60 * 60 * 1000;
+    localStorage.setItem(expireKey, expireTime);
+}
+
+function updateTimer() {
     let now = Date.now();
     let diff = expireTime - now;
 
     if (diff <= 0) {
-      document.body.innerHTML = "<h1>Time expired. Return to WordPress to restart.</h1>";
-      return;
+        document.body.innerHTML =
+          "<h1>Time expired. Return to WordPress to restart.</h1>";
+        return;
     }
 
-    let h = Math.floor(diff / (1000 * 60 * 60));
-    let m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    let s = Math.floor((diff % (1000 * 60)) / 1000);
+    let h = Math.floor(diff / 3600000);
+    let m = Math.floor((diff % 3600000) / 60000);
+    let s = Math.floor((diff % 60000) / 1000);
 
     document.getElementById("countdown").innerText = `${h}h ${m}m ${s}s`;
-    setTimeout(timerLoop, 1000);
-  }
-  timerLoop();
 
-  // --------------------------
-  // AD AFTER 30 MINUTES
-  // --------------------------
-  setTimeout(() => {
-    let ad = document.getElementById("adBox");
+    setTimeout(updateTimer, 1000);
+}
+updateTimer();
+
+
+
+/* ---------------------------
+   30 MINUTE AD POPUP (5s)
+--------------------------- */
+setTimeout(() => {
+    const ad = document.getElementById("adBox");
     ad.style.display = "flex";
 
-    setTimeout(() => {
-      ad.style.display = "none";
-    }, 5000);
-  }, 30 * 60 * 1000);
+    setTimeout(() => ad.style.display = "none", 5000);
+
+}, 30 * 60 * 1000);
 </script>
 
 </body>
