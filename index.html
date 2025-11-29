@@ -61,7 +61,7 @@
 
 <script>
   // Load movie list from JSON
-  fetch("/movies.json")
+  fetch("movies.json?cache=" + Date.now())
     .then(res => res.json())
     .then(data => {
       const grid = document.getElementById("movieGrid");
