@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Movie Library</title>
+<style>
+  body { font-family: Arial; margin: 0; padding: 20px; }
+  .card { display: inline-block; width: 200px; margin: 10px; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; cursor: pointer; text-align: center; }
+  .card img { width: 100%; }
+  .card h3 { margin: 5px 0; font-size: 16px; }
+</style>
+</head>
+<body>
+<h1>Freemium movies</h1>
+<div id="movies"></div>
+
+<script>
+fetch('movies.json')
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById('movies');
+    data.forEach(movie => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${movie.poster}" alt="${movie.title}">
+        <h3>${movie.title}</h3>
+        <p>${movie.year} | ${movie.genre.join(', ')}</p>
+      `;
+      card.onclick = () => {
+        window.location.href = `player.html?movie=${movie.id}`;
+      };
+      container.appendChild(card);
+    });
+  });
+</script>
+</body>
+</html>

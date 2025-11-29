@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Movie Player</title>
+<style>
+  body { font-family: Arial; margin:0; padding:0; background:#000; color:#fff; }
+  #player { width: 100%; max-width: 800px; margin: 20px auto; }
+  iframe { width: 100%; height: 450px; border: none; }
+  .servers { text-align: center; margin: 10px 0; }
+  .servers button { margin: 0 5px; padding: 5px 10px; cursor: pointer; }
+  .servers button.active { background: purple; color: white; }
+  #ad { display:none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: yellow; color:#000; padding:20px; font-size:18px; z-index: 9999; }
+</style>
+</head>
+<body>
+
+<div id="player"></div>
+<div class="servers" id="server-buttons"></div>
+<div id="ad">Your Ad Here</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const movieId = params.get('movie');
+const countdownKey = `movie_timer_${movieId}`;
+
+fetch('movies.json')
+  .then(res => res.json())
+  .then(movies => {
+    const movie = movies.find(m => m.id === movieId);
+    if(!movie) { document.body.innerHTML = '<h1>Movie not found</h1>'; return; }
+
+    const playerDiv = document.getElementById('player');
+    const serverDiv = document.getElementById('server-buttons');
+    const adDiv = document.getElementById('ad');
+    
+    // Create server buttons
+    Object.keys(movie.servers).forEach((key, idx) => {
+      const btn = document.createElement('button');
+      btn.textContent = key;
+      if(idx===0) btn.classList.add('active');
+      btn.onclick = () => {
+        document.getElementById('iframe-player').src = movie.servers[key];
+        document.querySelectorAll('.servers button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+      serverDiv.appendChild(btn);
+    });
+
+    // Create iframe
+    playerDiv.innerHTML = `<iframe id="iframe-player" src="${movie.servers[Object.keys(movie.servers)[0]]}" allowfullscreen></iframe>`;
+
+    // 12-hour countdown
+    let startTime = localStorage.getItem(countdownKey);
+    const now = Date.now();
+    if(!startTime) { startTime = now; localStorage.setItem(countdownKey, startTime); }
+    const endTime = parseInt(startTime) + 12*60*60*1000; // 12 hours
+    
+    function checkCountdown() {
+      if(Date.now() > endTime){
+        // Disable playback
+        playerDiv.innerHTML = '<h1>Session expired. Return to WordPress to watch again.</h1>';
+        serverDiv.style.display = 'none';
+        return;
+      }
+      requestAnimationFrame(checkCountdown);
+    }
+    checkCountdown();
+
+    // Show ad after 30 minutes
+    setTimeout(() => {
+      adDiv.style.display = 'block';
+      setTimeout(() => { adDiv.style.display = 'none'; }, 5000);
+    }, 30*60*1000); // 30 minutes
+  });
+</script>
+
+</body>
+</html>
