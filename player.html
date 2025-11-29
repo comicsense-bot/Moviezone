@@ -14,34 +14,9 @@
         padding: 20px;
     }
 
-    video {
-        width: 100%;
-        max-width: 900px;
-        margin-top: 20px;
-        border-radius: 10px;
-    }
-
     .server-buttons {
         margin-top: 15px;
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .server-btn {
-        padding: 10px 18px;
-        background: #444;
-        border: none;
-        border-radius: 8px;
-        color: white;
-        font-size: 15px;
-        cursor: pointer;
-    }
-
-    .server-btn.active {
-        background: #ff9800;
-        font-weight: bold;
+        display: none; /* Hidden because no internal player */
     }
 
     #adBox {
@@ -62,6 +37,19 @@
         font-size: 20px;
         margin-top: 10px;
     }
+
+    .external-link-btn {
+        margin-top: 30px;
+        padding: 12px 25px;
+        background: #ff9800;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        cursor: pointer;
+        color: #000;
+        text-decoration: none;
+        display: inline-block;
+    }
 </style>
 </head>
 
@@ -69,14 +57,8 @@
 
 <h2 id="movieTitle">Loading...</h2>
 
-<video id="player" controls></video>
-
-<div class="server-buttons">
-    <button class="server-btn" id="btn1">Server 1</button>
-    <button class="server-btn" id="btn2">Server 2</button>
-    <button class="server-btn" id="btn3">Server 3</button>
-    <button class="server-btn" id="btn4">Server 4</button>
-</div>
+<!-- External video link button -->
+<a id="externalLink" class="external-link-btn" href="#" target="_blank">Watch Now</a>
 
 <h3>Time left: <span id="countdown"></span></h3>
 
@@ -86,7 +68,6 @@
     <a id="adLink" href="#" target="_blank">Click Here</a>
 </div>
 
-
 <!-- ⭐ BUILT-IN MOVIE DATABASE ⭐ -->
 <script id="movieDB" type="application/json">
 {
@@ -94,31 +75,19 @@
     {
       "id": "movie1",
       "title": "Superman 2025",
-      "servers": {
-        "server1": "https://vidsrc.to/embed/movie/1061474",
-        "server2": "https://server2.com/fast9.mp4",
-        "server3": "https://server3.com/fast9.mp4",
-        "server4": "https://server4.com/fast9.mp4"
-      },
+      "link": "https://vidsrc.to/embed/movie/1061474",
       "adLink": "https://your-ad-link.com"
     },
 
     {
       "id": "movie2",
       "title": "Avatar 2: The Way of Water",
-      "servers": {
-        "server1": "https://server1.com/avatar2.mp4",
-        "server2": "https://server2.com/avatar2.mp4",
-        "server3": "https://server3.com/avatar2.mp4",
-        "server4": "https://server4.com/avatar2.mp4"
-      },
+      "link": "https://server1.com/avatar2.mp4",
       "adLink": "https://your-ad-link.com"
     }
   ]
 }
 </script>
-
-
 
 <script>
 /* ---------------------------
@@ -132,41 +101,22 @@ const db = JSON.parse(document.getElementById("movieDB").textContent);
 const movieID = new URLSearchParams(window.location.search).get("id");
 const MOVIE = db.movies.find(m => m.id === movieID);
 
-document.getElementById("movieTitle").innerText = MOVIE.title;
-document.getElementById("adLink").href = MOVIE.adLink;
-
-const player = document.getElementById("player");
-
-
-/* ---------------------------
-   SERVER SWITCHING
---------------------------- */
-function setServer(url, num) {
-    player.src = url;
-
-    document.querySelectorAll(".server-btn")
-        .forEach(btn => btn.classList.remove("active"));
-
-    document.getElementById("btn" + num).classList.add("active");
+if (!MOVIE) {
+    document.body.innerHTML = "<h1>Movie not found!</h1>";
+} else {
+    document.getElementById("movieTitle").innerText = MOVIE.title;
+    document.getElementById("externalLink").href = MOVIE.link;
+    document.getElementById("adLink").href = MOVIE.adLink;
 }
 
-document.getElementById("btn1").onclick = () => setServer(MOVIE.servers.server1, 1);
-document.getElementById("btn2").onclick = () => setServer(MOVIE.servers.server2, 2);
-document.getElementById("btn3").onclick = () => setServer(MOVIE.servers.server3, 3);
-document.getElementById("btn4").onclick = () => setServer(MOVIE.servers.server4, 4);
-
-setServer(MOVIE.servers.server1, 1); // Default server
-
-
-
 /* ---------------------------
-   12 HOUR COUNTDOWN TIMER
+   12 HOUR COUNTDOWN
 --------------------------- */
 let expireKey = "timer_" + movieID;
 let expireTime = localStorage.getItem(expireKey);
 
 if (!expireTime) {
-    expireTime = Date.now() + 12 * 60 * 60 * 1000;
+    expireTime = Date.now() + 12 * 60 * 60 * 1000; // 12 hours
     localStorage.setItem(expireKey, expireTime);
 }
 
@@ -190,8 +140,6 @@ function updateTimer() {
 }
 updateTimer();
 
-
-
 /* ---------------------------
    30 MINUTE AD POPUP (5s)
 --------------------------- */
@@ -200,7 +148,6 @@ setTimeout(() => {
     ad.style.display = "flex";
 
     setTimeout(() => ad.style.display = "none", 5000);
-
 }, 30 * 60 * 1000);
 </script>
 
