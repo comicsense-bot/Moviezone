@@ -152,17 +152,16 @@
 </script>
 
 <script>
+<script>
 /* ---------------------------
    READ DATABASE FROM HTML
 --------------------------- */
 const db = JSON.parse(document.getElementById("movieDB").textContent);
-
 /* ---------------------------
    GET MOVIE ID FROM URL
 --------------------------- */
 const movieID = new URLSearchParams(window.location.search).get("id");
 const MOVIE = db.movies.find(m => m.id === movieID);
-
 if (!MOVIE) {
     document.body.innerHTML = "<h1>Movie not found!</h1>";
 } else {
@@ -173,47 +172,47 @@ if (!MOVIE) {
 /* ---------------------------
    SERVER BUTTON LOGIC
 --------------------------- */
-let selectedServer = null;
+let selectedServer = Object.keys(MOVIE.servers)[0]; // default to first server
 const serverButtons = document.querySelectorAll("#serverButtons button");
+
+// Highlight default server button
 serverButtons.forEach(btn => {
+    if (btn.dataset.server === selectedServer) btn.classList.add("active");
+
     btn.addEventListener("click", () => {
         selectedServer = btn.dataset.server;
         // Highlight active button
         serverButtons.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
-
         // Update Watch Now link
         document.getElementById("externalLink").href = MOVIE.servers[selectedServer];
     });
 });
+
+// Set default Watch Now link
+document.getElementById("externalLink").href = MOVIE.servers[selectedServer];
 
 /* ---------------------------
    12 HOUR COUNTDOWN
 --------------------------- */
 let expireKey = "timer_" + movieID;
 let expireTime = localStorage.getItem(expireKey);
-
 if (!expireTime) {
     expireTime = Date.now() + 12 * 60 * 60 * 1000; // 12 hours
     localStorage.setItem(expireKey, expireTime);
 }
-
 function updateTimer() {
     let now = Date.now();
     let diff = expireTime - now;
-
     if (diff <= 0) {
         document.body.innerHTML =
           "<h1>Time expired. Return to WordPress to restart.</h1>";
         return;
     }
-
     let h = Math.floor(diff / 3600000);
     let m = Math.floor((diff % 3600000) / 60000);
     let s = Math.floor((diff % 60000) / 1000);
-
     document.getElementById("countdown").innerText = `${h}h ${m}m ${s}s`;
-
     setTimeout(updateTimer, 1000);
 }
 updateTimer();
@@ -224,9 +223,9 @@ updateTimer();
 setTimeout(() => {
     const ad = document.getElementById("adBox");
     ad.style.display = "flex";
-
     setTimeout(() => ad.style.display = "none", 5000);
 }, 30 * 60 * 1000);
+</script>
 </script>
 
 </body>
