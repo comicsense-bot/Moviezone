@@ -1,78 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Movie Player</title>
-<style>
-  body { font-family: Arial; margin:0; padding:0; background:#000; color:#fff; }
-  #player { width: 100%; max-width: 800px; margin: 20px auto; }
-  iframe { width: 100%; height: 450px; border: none; }
-  .servers { text-align: center; margin: 10px 0; }
-  .servers button { margin: 0 5px; padding: 5px 10px; cursor: pointer; }
-  .servers button.active { background: purple; color: white; }
-  #ad { display:none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: yellow; color:#000; padding:20px; font-size:18px; z-index: 9999; }
-</style>
+  <meta charset="UTF-8">
+  <title>Watch Movie</title>
+
+  <style>
+    body { font-family: Arial; background:#000; color:white; text-align:center; }
+    video { width:100%; max-width:900px; margin-top:20px; border-radius:10px; }
+    
+    .server-buttons {
+      margin-top:15px;
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .server-btn {
+      padding:10px 18px;
+      background:#444;
+      border:none;
+      border-radius:8px;
+      color:white;
+      font-size:15px;
+      cursor:pointer;
+    }
+
+    .server-btn.active {
+      background:#ff9800;
+      font-weight:bold;
+    }
+
+    #adBox {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.85);
+      color:white; font-size:25px;
+      display:none;
+      justify-content:center; align-items:center;
+      text-align:center;
+    }
+  </style>
 </head>
 <body>
 
-<div id="player"></div>
-<div class="servers" id="server-buttons"></div>
-<div id="ad">Your Ad Here</div>
+<h2 id="movieTitle"></h2>
+
+<video id="player" controls></video>
+
+<div class="server-buttons">
+  <button class="server-btn" id="btn1">Server 1</button>
+  <button class="server-btn" id="btn2">Server 2</button>
+  <button class="server-btn" id="btn3">Server 3</button>
+  <button class="server-btn" id="btn4">Server 4</button>
+</div>
+
+<h3>Time left: <span id="countdown"></span></h3>
+
+<div id="adBox">
+  <p>Advertisement</p>
+  <a id="adLink" href="#" style="color:yellow; font-size:20px;" target="_blank">Click here</a>
+</div>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const movieId = params.get('movie');
-const countdownKey = `movie_timer_${movieId}`;
+  // Get movie ID
+  const movieID = new URLSearchParams(window.location.search).get("id");
 
-fetch('movies.json')
-  .then(res => res.json())
-  .then(movies => {
-    const movie = movies.find(m => m.id === movieId);
-    if(!movie) { document.body.innerHTML = '<h1>Movie not found</h1>'; return; }
+  let MOVIE = null;
 
-    const playerDiv = document.getElementById('player');
-    const serverDiv = document.getElementById('server-buttons');
-    const adDiv = document.getElementById('ad');
-    
-    // Create server buttons
-    Object.keys(movie.servers).forEach((key, idx) => {
-      const btn = document.createElement('button');
-      btn.textContent = key;
-      if(idx===0) btn.classList.add('active');
-      btn.onclick = () => {
-        document.getElementById('iframe-player').src = movie.servers[key];
-        document.querySelectorAll('.servers button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      };
-      serverDiv.appendChild(btn);
+  // Load movie data
+  fetch("movies.json")
+    .then(res => res.json())
+    .then(data => {
+      MOVIE = data.movies.find(m => m.id === movieID);
+
+      document.getElementById("movieTitle").innerText = MOVIE.title;
+      document.getElementById("adLink").href = MOVIE.adLink;
+
+      // Default server
+      setServer(MOVIE.servers.server1, 1);
+
+      // Button actions
+      document.getElementById("btn1").onclick = () => setServer(MOVIE.servers.server1, 1);
+      document.getElementById("btn2").onclick = () => setServer(MOVIE.servers.server2, 2);
+      document.getElementById("btn3").onclick = () => setServer(MOVIE.servers.server3, 3);
+      document.getElementById("btn4").onclick = () => setServer(MOVIE.servers.server4, 4);
     });
 
-    // Create iframe
-    playerDiv.innerHTML = `<iframe id="iframe-player" src="${movie.servers[Object.keys(movie.servers)[0]]}" allowfullscreen></iframe>`;
+  function setServer(url, number) {
+    document.getElementById("player").src = url;
 
-    // 12-hour countdown
-    let startTime = localStorage.getItem(countdownKey);
-    const now = Date.now();
-    if(!startTime) { startTime = now; localStorage.setItem(countdownKey, startTime); }
-    const endTime = parseInt(startTime) + 12*60*60*1000; // 12 hours
-    
-    function checkCountdown() {
-      if(Date.now() > endTime){
-        // Disable playback
-        playerDiv.innerHTML = '<h1>Session expired. Return to WordPress to watch again.</h1>';
-        serverDiv.style.display = 'none';
-        return;
-      }
-      requestAnimationFrame(checkCountdown);
+    // Remove all active
+    document.querySelectorAll(".server-btn").forEach(btn => btn.classList.remove("active"));
+
+    // Highlight selected
+    document.getElementById("btn" + number).classList.add("active");
+  }
+
+  // --------------------------
+  // COUNTDOWN SYSTEM (12 HOURS)
+  // --------------------------
+  let expireTime = localStorage.getItem("timer_" + movieID);
+
+  if (!expireTime) {
+    expireTime = Date.now() + (12 * 60 * 60 * 1000); // 12 hours
+    localStorage.setItem("timer_" + movieID, expireTime);
+  }
+
+  function timerLoop() {
+    let now = Date.now();
+    let diff = expireTime - now;
+
+    if (diff <= 0) {
+      document.body.innerHTML = "<h1>Time expired. Return to WordPress to restart.</h1>";
+      return;
     }
-    checkCountdown();
 
-    // Show ad after 30 minutes
+    let h = Math.floor(diff / (1000 * 60 * 60));
+    let m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    let s = Math.floor((diff % (1000 * 60)) / 1000);
+
+    document.getElementById("countdown").innerText = `${h}h ${m}m ${s}s`;
+    setTimeout(timerLoop, 1000);
+  }
+  timerLoop();
+
+  // --------------------------
+  // AD AFTER 30 MINUTES
+  // --------------------------
+  setTimeout(() => {
+    let ad = document.getElementById("adBox");
+    ad.style.display = "flex";
+
     setTimeout(() => {
-      adDiv.style.display = 'block';
-      setTimeout(() => { adDiv.style.display = 'none'; }, 5000);
-    }, 30*60*1000); // 30 minutes
-  });
+      ad.style.display = "none";
+    }, 5000);
+  }, 30 * 60 * 1000);
 </script>
 
 </body>
