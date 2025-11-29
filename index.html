@@ -20,6 +20,19 @@
       font-size: 24px;
     }
 
+    /* ⭐ Search bar style ⭐ */
+    #searchBar {
+      display: block;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto 20px auto;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+    }
+
     .movie-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -47,6 +60,7 @@
       height: auto;
       object-fit: cover;
       aspect-ratio: 16/9;
+      background: #333; /* fallback bg if image fails */
     }
 
     .movie-title {
@@ -97,6 +111,9 @@
 
 <h1>🎬 Latest Movies</h1>
 
+<!-- ⭐ Search bar ⭐ -->
+<input type="text" id="searchBar" placeholder="Search movies...">
+
 <div class="movie-grid" id="movieGrid"></div>
 
 <!--  ⭐ HIDDEN JSON DATABASE INSIDE INDEX.HTML ⭐ -->
@@ -106,7 +123,7 @@
     {
       "id": "movie1",
       "title": "Superman 2025",
-      "thumbnail": "https://share.google/UwZxcOqeND0IPWaGi",
+      "thumbnail": "https://via.placeholder.com/300x169?text=Superman+2025",
       "servers": {
         "server1": "https://vidsrc.to/embed/movie/1061474",
         "server2": "https://server2.com/fast9.mp4",
@@ -118,7 +135,7 @@
     {
       "id": "movie2",
       "title": "Avatar: The Way of Water",
-      "thumbnail": "images/avatar2.jpg",
+      "thumbnail": "https://via.placeholder.com/300x169?text=Avatar+2",
       "servers": {
         "server1": "https://server1.com/avatar2.mp4",
         "server2": "https://server2.com/avatar2.mp4",
@@ -132,27 +149,40 @@
 </script>
 
 <script>
-  // ⭐ READ DATABASE INSIDE HTML ⭐
   const dbText = document.getElementById("movieDB").textContent;
   const data = JSON.parse(dbText);
 
   const grid = document.getElementById("movieGrid");
+  const searchBar = document.getElementById("searchBar");
 
-  // Build movie cards
-  data.movies.forEach(movie => {
-    const card = document.createElement("div");
-    card.className = "movie-card";
+  function displayMovies(filter = "") {
+    grid.innerHTML = ""; // clear grid
 
-    card.innerHTML = `
-      <img src="${movie.thumbnail}" alt="${movie.title}">
-      <div class="movie-title">${movie.title}</div>
-    `;
+    data.movies
+      .filter(movie => movie.title.toLowerCase().includes(filter.toLowerCase()))
+      .forEach(movie => {
+        const card = document.createElement("div");
+        card.className = "movie-card";
 
-    card.onclick = () => {
-      window.location.href = `player.html?id=${movie.id}`;
-    };
+        card.innerHTML = `
+          <img src="${movie.thumbnail}" alt="${movie.title}">
+          <div class="movie-title">${movie.title}</div>
+        `;
 
-    grid.appendChild(card);
+        card.onclick = () => {
+          window.location.href = `player.html?id=${movie.id}`;
+        };
+
+        grid.appendChild(card);
+      });
+  }
+
+  // ⭐ Initial display ⭐
+  displayMovies();
+
+  // ⭐ Search bar functionality ⭐
+  searchBar.addEventListener("input", e => {
+    displayMovies(e.target.value);
   });
 </script>
 
