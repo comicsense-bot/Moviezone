@@ -1,0 +1,19 @@
+[
+  {
+    "id": "superman-2025",
+    "title": "Superman 2025",
+    "poster": "https://image.tmdb.org/t/p/w500/ombsmhYUqR4qqOLOxAyr5V8hbyv.jpg",
+    "description": "Superman, a journalist in Metropolis, reconciles his Kryptonian heritage with his human upbringing.",
+    "genre": ["Action", "Adventure", "Science Fiction"],
+    "year": 2025,
+    "duration": "130 min",
+    "imdb": 7.2,
+    "director": "DC Studios, Troll Court Entertainment, The Safran Company",
+    "servers": {
+      "vidsrc": "https://vidsrc.to/embed/movie/1061474",
+      "vidfast": "https://111movies.com/movie/1061474",
+      "vidlink": "https://vidlink.pro/movie/1061474",
+      "videasy": "https://player.videasy.net/movie/1061474"
+    }
+  }
+]
