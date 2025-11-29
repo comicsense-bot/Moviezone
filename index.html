@@ -1,140 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Watch Movie</title>
+  <title>Movie Library</title>
 
   <style>
-    body { font-family: Arial; background:#000; color:white; text-align:center; }
-    video { width:100%; max-width:900px; margin-top:20px; border-radius:10px; }
-    
-    .server-buttons {
-      margin-top:15px;
-      display:flex;
-      justify-content:center;
-      gap:10px;
-      flex-wrap:wrap;
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
     }
 
-    .server-btn {
-      padding:10px 18px;
-      background:#444;
-      border:none;
-      border-radius:8px;
-      color:white;
-      font-size:15px;
-      cursor:pointer;
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
     }
 
-    .server-btn.active {
-      background:#ff9800;
-      font-weight:bold;
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 20px;
+      padding: 10px;
     }
 
-    #adBox {
-      position:fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.85);
-      color:white; font-size:25px;
-      display:none;
-      justify-content:center; align-items:center;
-      text-align:center;
+    .movie-card {
+      background: #1c1c1c;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .movie-card:hover {
+      transform: scale(1.05);
+    }
+
+    .movie-card img {
+      width: 100%;
+      height: 230px;
+      object-fit: cover;
+    }
+
+    .movie-title {
+      padding: 10px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
     }
   </style>
 </head>
+
 <body>
 
-<h2 id="movieTitle"></h2>
+<h1>🎬 Latest Movies</h1>
 
-<video id="player" controls></video>
-
-<div class="server-buttons">
-  <button class="server-btn" id="btn1">Server 1</button>
-  <button class="server-btn" id="btn2">Server 2</button>
-  <button class="server-btn" id="btn3">Server 3</button>
-  <button class="server-btn" id="btn4">Server 4</button>
-</div>
-
-<h3>Time left: <span id="countdown"></span></h3>
-
-<div id="adBox">
-  <p>Advertisement</p>
-  <a id="adLink" href="#" style="color:yellow; font-size:20px;" target="_blank">Click here</a>
-</div>
+<div class="movie-grid" id="movieGrid"></div>
 
 <script>
-  // Get movie ID
-  const movieID = new URLSearchParams(window.location.search).get("id");
-
-  let MOVIE = null;
-
-  // Load movie data
+  // Load movie list from JSON
   fetch("movies.json")
     .then(res => res.json())
     .then(data => {
-      MOVIE = data.movies.find(m => m.id === movieID);
+      const grid = document.getElementById("movieGrid");
 
-      document.getElementById("movieTitle").innerText = MOVIE.title;
-      document.getElementById("adLink").href = MOVIE.adLink;
+      data.movies.forEach(movie => {
+        let card = document.createElement("div");
+        card.className = "movie-card";
 
-      // Default server
-      setServer(MOVIE.servers.server1, 1);
+        card.innerHTML = `
+          <img src="${movie.thumbnail}" alt="${movie.title}">
+          <div class="movie-title">${movie.title}</div>
+        `;
 
-      // Button actions
-      document.getElementById("btn1").onclick = () => setServer(MOVIE.servers.server1, 1);
-      document.getElementById("btn2").onclick = () => setServer(MOVIE.servers.server2, 2);
-      document.getElementById("btn3").onclick = () => setServer(MOVIE.servers.server3, 3);
-      document.getElementById("btn4").onclick = () => setServer(MOVIE.servers.server4, 4);
-    });
+        // Open player.html with movie ID
+        card.onclick = () => {
+          window.location.href = `player.html?id=${movie.id}`;
+        };
 
-  function setServer(url, number) {
-    document.getElementById("player").src = url;
-
-    // Remove all active
-    document.querySelectorAll(".server-btn").forEach(btn => btn.classList.remove("active"));
-
-    // Highlight selected
-    document.getElementById("btn" + number).classList.add("active");
-  }
-
-  // --------------------------
-  // COUNTDOWN SYSTEM (12 HOURS)
-  // --------------------------
-  let expireTime = localStorage.getItem("timer_" + movieID);
-
-  if (!expireTime) {
-    expireTime = Date.now() + (12 * 60 * 60 * 1000); // 12 hours
-    localStorage.setItem("timer_" + movieID, expireTime);
-  }
-
-  function timerLoop() {
-    let now = Date.now();
-    let diff = expireTime - now;
-
-    if (diff <= 0) {
-      document.body.innerHTML = "<h1>Time expired. Return to WordPress to restart.</h1>";
-      return;
-    }
-
-    let h = Math.floor(diff / (1000 * 60 * 60));
-    let m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    let s = Math.floor((diff % (1000 * 60)) / 1000);
-
-    document.getElementById("countdown").innerText = `${h}h ${m}m ${s}s`;
-    setTimeout(timerLoop, 1000);
-  }
-  timerLoop();
-
-  // --------------------------
-  // AD AFTER 30 MINUTES
-  // --------------------------
-  setTimeout(() => {
-    let ad = document.getElementById("adBox");
-    ad.style.display = "flex";
-
-    setTimeout(() => {
-      ad.style.display = "none";
-    }, 5000);
-  }, 30 * 60 * 1000);
+        grid.appendChild(card);
+      });
+    })
+    .catch(err => console.error("JSON load error:", err));
 </script>
 
 </body>
